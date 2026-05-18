@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="A terminal-inspired personal website with command-line navigation."
+    >
+    <title>Terminal Portfolio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    >
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="stage" aria-label="Terminal portfolio">
+      <div class="ambient ambient-a">
+        <img src="kaito.jpg" alt="">
+      </div>
+      <div class="ambient ambient-b">
+        <img src="kaitokid.jpg" alt="">
+      </div>
+
+      <section class="terminal-shell" aria-label="Interactive terminal">
+        <header class="terminal-bar">
+          <p id="terminal-title">guest@portfolio:~/home</p>
+        </header>
+
+        <div id="terminal-output" class="terminal-output" aria-live="polite"></div>
+
+        <form id="terminal-form" class="terminal-form" autocomplete="off">
+          <label id="prompt-label" class="prompt-label" for="terminal-input">
+            guest@portfolio:~/home$
+          </label>
+          <input
+            id="terminal-input"
+            class="terminal-input"
+            name="command"
+            type="text"
+            spellcheck="false"
+            aria-labelledby="prompt-label"
+            autofocus
+          >
+        </form>
+      </section>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>

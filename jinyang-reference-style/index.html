@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A reference-style terminal website for Jinyang.">
+    <title>Jinyang</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    >
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="page">
+      <section class="terminal" aria-label="Jinyang terminal website">
+        <header class="terminal-header">Jinyang</header>
+        <div id="console" class="console" aria-live="polite"></div>
+        <form id="command-form" class="command-line" autocomplete="off">
+          <label id="prompt" class="prefix" for="command-input">guest@jinyang:~$</label>
+          <input
+            id="command-input"
+            class="command-input"
+            name="command"
+            type="text"
+            spellcheck="false"
+            aria-labelledby="prompt"
+            autofocus
+          >
+        </form>
+      </section>
+    </main>
+    <script src="script.js"></script>
+  </body>
+</html>

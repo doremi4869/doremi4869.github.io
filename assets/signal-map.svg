@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-label="Abstract terminal signal map">
+  <rect width="1200" height="760" fill="#10131d"/>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M102 601C210 503 273 553 382 451S566 314 691 351s194 18 321-137" stroke="#6bdcff" stroke-opacity=".18" stroke-width="4"/>
+    <path d="M78 430c152-78 251-81 362-7s192 84 316 23 214-151 354-120" stroke="#69f0a3" stroke-opacity=".15" stroke-width="3"/>
+    <path d="M150 206c134 64 231 72 339 23s174-80 283-28 178 46 289-62" stroke="#ff73c7" stroke-opacity=".13" stroke-width="3"/>
+    <path d="M176 650h848M176 560h848M176 470h848M176 380h848M176 290h848M176 200h848M176 110h848" stroke="#edf2f7" stroke-opacity=".045" stroke-width="1"/>
+    <path d="M240 82v602M360 82v602M480 82v602M600 82v602M720 82v602M840 82v602M960 82v602" stroke="#edf2f7" stroke-opacity=".045" stroke-width="1"/>
+  </g>
+  <g>
+    <circle cx="102" cy="601" r="7" fill="#6bdcff" fill-opacity=".55"/>
+    <circle cx="382" cy="451" r="7" fill="#69f0a3" fill-opacity=".5"/>
+    <circle cx="691" cy="351" r="7" fill="#f8e36a" fill-opacity=".5"/>
+    <circle cx="1012" cy="214" r="7" fill="#ff73c7" fill-opacity=".5"/>
+    <circle cx="440" cy="423" r="5" fill="#6bdcff" fill-opacity=".45"/>
+    <circle cx="756" cy="446" r="5" fill="#69f0a3" fill-opacity=".45"/>
+    <circle cx="489" cy="229" r="5" fill="#ff73c7" fill-opacity=".45"/>
+  </g>
+</svg>
