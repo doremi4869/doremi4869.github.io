@@ -291,7 +291,7 @@ async function boot() {
   updatePrompt();
   await typeBlock("session initializing...", "terminal-line muted", 18);
   await wait(180);
-  await typeBlock(asciiLogo, "ascii");
+  await typeBlock(asciiLogo, "ascii", 2);
   appendLine('type <span class="yellow">please</span> to see a list of commands');
   input.disabled = false;
   input.focus();
