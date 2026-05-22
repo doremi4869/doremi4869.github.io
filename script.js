@@ -9,57 +9,77 @@ const state = {
   history: [],
   historyIndex: 0,
   booted: false,
+  awaitingPassphrase: false,
+  phraseBlock: null,
 };
 
 const fileTree = {
   "/home": {
     type: "dir",
-    children: ["about", "now.txt", "contact.txt"],
+    children: ["about", "funstats", "interests"],
   },
   "/home/about": {
     type: "dir",
-    children: ["bio.txt", "stack.txt", "interests.txt"],
+    children: ["bio.txt", "now.txt", "contact.txt"],
   },
-  "/home/now.txt": {
+  "/home/interests": {
+    type: "dir",
+    children: ["math", "physics", "piano", "puzzles", "statistics"],
+  },
+  "/home/funstats": {
+    type: "dir",
+    children: ["zetamac.txt"],
+  },
+  "/home/funstats/zetamac.txt": {
     type: "file",
     content: [
-      ["accent", "Current focus"],
-      "Building useful software, polishing a personal site, and collecting work that deserves a permanent home.",
+      "highscore: 124",
     ],
   },
-  "/home/contact.txt": {
+  "/home/interests/math": {
+    type: "dir",
+    children: [],
+  },
+  "/home/interests/physics": {
+    type: "dir",
+    children: [],
+  },
+  "/home/interests/piano": {
+    type: "dir",
+    children: [],
+  },
+  "/home/interests/puzzles": {
+    type: "dir",
+    children: [],
+  },
+  "/home/interests/statistics": {
+    type: "dir",
+    children: [],
+  },
+  "/home/about/now.txt": {
+    type: "file",
+    content: [
+      "I am working at A Priori Investments as a quantitative research intern. In my free time, you may find me studying statistics, physics, or solving puzzles. I may also be practicing piano on my table since I won't have access to one for a while...",
+    ],
+  },
+  "/home/about/contact.txt": {
     type: "file",
     content: [
       "email: jinli@college.harvard.edu",
+      "phone: 561-774-1788"
     ],
   },
   "/home/about/bio.txt": {
     type: "file",
     content: [
-      ["accent", "Jinyang Li"],
-      "Hey, I am Jinyang. I am a statistics and quantitative researcher.",
-    ],
-  },
-  "/home/about/stack.txt": {
-    type: "file",
-    content: [
-      ["table", [
-        ["Languages", "JavaScript, Python, TypeScript, SQL"],
-        ["Tools", "Git, Figma, Node, cloud platforms"],
-        ["Focus", "Frontend systems, data products, automation"],
-      ]],
-    ],
-  },
-  "/home/about/interests.txt": {
-    type: "file",
-    content: [
-      "Interactive interfaces, clean information design, practical tooling, and small details that make software feel quick.",
+      "Hey, I am Jinyang, a rising senior at Harvard studying mathematics and statistics. I am passionate about quantitative research in finance, statistics, and science. Currently, I am especially interested in probability theory, market behavior, stochastic processes, and the intersection of statistics and decision-making.",
+      "Outside of academics, I love listening and playing classical music, speedcubing, and playing competitive Brawl Stars.",
     ],
   },
 };
 
 const commands = {
-  please: "show available commands",
+  help: "show available commands",
   ls: "list directory contents",
   cd: "change directory; for forwards, cd <directory>, for backwards, cd ..",
   cat: "print file contents",
@@ -67,18 +87,12 @@ const commands = {
   whoami: "find out...",
 };
 
-const asciiLogo = String.raw`
-     _  ___  _   _  ___  _   _  ____  _  _
-    | ||_ _|| \ | ||_ _|| | | |/ ___|| || |
-    | | | | |  \| | | | | | | |\___ \| || |
- _  | | | | | |\  | | | | | | | ___) |_||_|
-| |_| | | | | | \ | | | | |_| ||____/(_)(_)
- \___/ |___||_|  \_||___| \___/
-  \\___\\___\\___\\___\\___\\___\\___\\___
-   \\___\\___\\___\\___\\___\\___\\___\\__
-    \\___\\___\\___\\___\\___\\___\\___\\_
-     \\___\\___\\___\\___\\___\\___\\___\\
-`;
+const introText = "Smiles and laughter are always good, but ";
+const passphrase = "never forget your poker face.";
+const passphraseWithoutPeriod = "never forget your poker face";
+const displayPhraseStart = "never forget your ";
+const displayPhraseEmphasis = "Poker Face.";
+const displayPhraseEnd = "";
 
 function sanitize(value) {
   return value.replace(/[&<>"']/g, (char) => {
@@ -119,17 +133,32 @@ async function typeBlock(content, className = "terminal-line", speed = 7) {
 
   for (const character of content) {
     block.textContent += character;
+    if (state.booted) output.scrollTop = output.scrollHeight;
     await wait(character === "\n" ? speed * 3 : speed);
+  }
+
+  return block;
+}
+
+async function typeIntoBlock(block, content, speed = 22) {
+  const textNode = document.createTextNode("");
+  block.append(textNode);
+
+  for (const character of content) {
+    textNode.textContent += character;
+    if (state.booted) output.scrollTop = output.scrollHeight;
+    await wait(speed);
   }
 }
 
-async function revealLines(content, className = "terminal-line", linesPerStep = 2, speed = 18) {
-  const block = appendBlock("", className);
-  const lines = content.trimEnd().split("\n");
+async function typeStyledIntoBlock(block, content, className, speed = 22) {
+  const span = document.createElement("span");
+  span.className = className;
+  block.append(span);
 
-  for (let index = 0; index < lines.length; index += linesPerStep) {
-    const nextLines = lines.slice(index, index + linesPerStep).join("\n");
-    block.textContent += `${block.textContent ? "\n" : ""}${nextLines}`;
+  for (const character of content) {
+    span.textContent += character;
+    if (state.booted) output.scrollTop = output.scrollHeight;
     await wait(speed);
   }
 }
@@ -151,9 +180,10 @@ function appendTable(rows) {
 }
 
 function updatePrompt() {
-  const text = `jinyangli@my-portfolio:~${state.cwd.replace("/home", "") || "/home"}$`;
+  const path = state.cwd.replace("/home", "") || "/home";
+  const text = `jinyangli:~${path} %`;
   promptLabel.textContent = text;
-  terminalTitle.textContent = text.replace("$", "");
+  terminalTitle.textContent = text;
 }
 
 function normalizePath(target = "") {
@@ -190,20 +220,136 @@ function nodeAt(path) {
   return fileTree[path];
 }
 
-function printContent(content) {
-  content.forEach((item) => {
-    if (Array.isArray(item) && item[0] === "accent") {
-      appendLine(`<span class="accent">${sanitize(item[1])}</span>`);
+function setInputValue(value) {
+  input.value = value;
+  input.setSelectionRange(value.length, value.length);
+}
+
+function commonPrefix(values) {
+  if (!values.length) return "";
+
+  return values.reduce((prefix, value) => {
+    let index = 0;
+    while (index < prefix.length && prefix[index] === value[index]) {
+      index += 1;
+    }
+    return prefix.slice(0, index);
+  });
+}
+
+function pathCompletionParts(partialPath) {
+  const slashIndex = partialPath.lastIndexOf("/");
+
+  if (slashIndex === -1) {
+    return {
+      directory: state.cwd,
+      leaf: partialPath,
+      visiblePrefix: "",
+    };
+  }
+
+  const directoryInput = partialPath.slice(0, slashIndex);
+
+  return {
+    directory: normalizePath(directoryInput || "/"),
+    leaf: partialPath.slice(slashIndex + 1),
+    visiblePrefix: partialPath.slice(0, slashIndex + 1),
+  };
+}
+
+function pathCompletions(partialPath) {
+  const { directory, leaf, visiblePrefix } = pathCompletionParts(partialPath);
+  const directoryNode = nodeAt(directory);
+
+  if (!directoryNode || directoryNode.type !== "dir") return [];
+
+  return directoryNode.children
+    .filter((child) => child.startsWith(leaf))
+    .map((child) => {
+      const childPath = `${directory}/${child}`.replace("//", "/");
+      const childNode = nodeAt(childPath);
+      const suffix = childNode?.type === "dir" ? "/" : "";
+      return {
+        label: `${child}${suffix}`,
+        type: childNode?.type || "file",
+        value: `${visiblePrefix}${child}${suffix}`,
+      };
+    });
+}
+
+function showCompletionOptions(options) {
+  const entries = options.map((option) => {
+    const className = option.type === "dir" ? "cyan" : "yellow";
+    return `<span class="${className}">${sanitize(option.label)}</span>`;
+  });
+
+  appendLine(entries.join("   "));
+}
+
+function completeInput() {
+  const rawValue = input.value;
+  const value = rawValue.trimStart();
+
+  if (!value) return;
+
+  if (!value.includes(" ")) {
+    const matches = Object.keys(commands).filter((command) => command.startsWith(value.toLowerCase()));
+
+    if (matches.length === 1) {
+      setInputValue(`${matches[0]} `);
       return;
+    }
+
+    if (matches.length > 1) {
+      showCompletionOptions(matches.map((command) => ({ label: command, type: "file" })));
+    }
+
+    return;
+  }
+
+  const [rawCommand] = value.split(/\s+/);
+  const command = rawCommand.toLowerCase();
+
+  if (!["cat", "cd", "ls"].includes(command)) return;
+
+  const partialPath = value.endsWith(" ")
+    ? ""
+    : value.slice(rawCommand.length).trimStart();
+
+  if (partialPath.includes(" ")) return;
+
+  const matches = pathCompletions(partialPath);
+
+  if (matches.length === 1) {
+    setInputValue(`${command} ${matches[0].value}`);
+    return;
+  }
+
+  if (matches.length > 1) {
+    const sharedPrefix = commonPrefix(matches.map((match) => match.value));
+    if (sharedPrefix.length > partialPath.length) {
+      setInputValue(`${command} ${sharedPrefix}`);
+      return;
+    }
+
+    showCompletionOptions(matches);
+  }
+}
+
+async function printContent(content) {
+  for (const item of content) {
+    if (Array.isArray(item) && item[0] === "accent") {
+      await typeBlock(item[1], "terminal-line accent", 8);
+      continue;
     }
 
     if (Array.isArray(item) && item[0] === "table") {
       appendTable(item[1]);
-      return;
+      continue;
     }
 
-    appendLine(sanitize(item));
-  });
+    await typeBlock(item, "terminal-line", 8);
+  }
 }
 
 function listDirectory(path) {
@@ -228,7 +374,7 @@ function showHelp() {
   appendTable(Object.entries(commands));
 }
 
-function runCommand(rawCommand) {
+async function runCommand(rawCommand) {
   const command = rawCommand.trim();
 
   appendLine(
@@ -244,7 +390,7 @@ function runCommand(rawCommand) {
   const [name, ...args] = command.split(/\s+/);
 
   switch (name.toLowerCase()) {
-    case "please":
+    case "help":
       showHelp();
       break;
 
@@ -278,7 +424,13 @@ function runCommand(rawCommand) {
       const target = normalizePath(args[0]);
       const node = nodeAt(target);
       if (node?.type === "file") {
-        printContent(node.content);
+        input.disabled = true;
+        try {
+          await printContent(node.content);
+        } finally {
+          input.disabled = false;
+          input.focus();
+        }
       } else {
         appendLine(`<span class="error">${sanitize(args[0])}: not a file</span>`);
       }
@@ -294,31 +446,64 @@ function runCommand(rawCommand) {
       break;
 
     default:
-      appendLine(`<span class="error">${sanitize(name)}: command not found ;D RIP you </span>`);
+      appendLine(`<span class="error">${sanitize(name)}: command not found... use <span class="green">help</span></span>`);
   }
 }
 
 async function boot() {
   input.disabled = true;
+  promptLabel.textContent = "";
+  terminalTitle.textContent = "AUTHORIZATION REQUIRED";
+  state.phraseBlock = await typeBlock(introText, "ascii", 24);
+  state.awaitingPassphrase = true;
+  input.disabled = false;
+  input.focus();
+}
+
+async function completePassphrase(value) {
+  const normalizedValue = value.trim().toLowerCase();
+
+  if (normalizedValue !== passphrase && normalizedValue !== passphraseWithoutPeriod) {
+    appendLine('<span class="error">access denied</span>');
+    return;
+  }
+
+  state.awaitingPassphrase = false;
+  input.disabled = true;
+  state.phraseBlock.textContent = introText;
+  await typeIntoBlock(state.phraseBlock, displayPhraseStart, 22);
+  await typeStyledIntoBlock(state.phraseBlock, displayPhraseEmphasis, "blood-red", 22);
+  await typeIntoBlock(state.phraseBlock, displayPhraseEnd, 22);
+  await wait(140);
+  document.body.classList.add("unlocked");
   updatePrompt();
-  await typeBlock("session initializing...", "terminal-line muted", 18);
-  await wait(180);
-  await revealLines(asciiLogo, "ascii", 2, 14);
-  appendLine('type <span class="yellow">please</span> to see a list of commands');
   input.disabled = false;
   input.focus();
   state.booted = true;
 }
 
-form.addEventListener("submit", (event) => {
+form.addEventListener("submit", async (event) => {
   event.preventDefault();
+  const command = input.value;
+  input.value = "";
+
+  if (state.awaitingPassphrase) {
+    completePassphrase(command);
+    return;
+  }
+
   if (!state.booted) return;
 
-  runCommand(input.value);
-  input.value = "";
+  await runCommand(command);
 });
 
 input.addEventListener("keydown", (event) => {
+  if (event.key === "Tab") {
+    event.preventDefault();
+    if (state.booted && !state.awaitingPassphrase) completeInput();
+    return;
+  }
+
   if (event.key === "ArrowUp") {
     event.preventDefault();
     state.historyIndex = Math.max(0, state.historyIndex - 1);
