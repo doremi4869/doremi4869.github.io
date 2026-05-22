@@ -70,9 +70,10 @@ const commands = {
 const asciiLogo = String.raw`
      _  ___  _   _  ___  _   _  ____  _  _
     | ||_ _|| \ | ||_ _|| | | |/ ___|| || |
- _  | | | | |  \| | | | | | | |\___ \| || |
-| |_| | | | | |\  | | | | |_| | ___) |_||_|
- \___/ |___||_| \_||___| \___/ |____/(_)(_)
+    | | | | |  \| | | | | | | |\___ \| || |
+ _  | | | | | |\  | | | | | | | ___) |_||_|
+| |_| | | | | | \ | | | | |_| ||____/(_)(_)
+ \___/ |___||_|  \_||___| \___/
   \\___\\___\\___\\___\\___\\___\\___\\___
    \\___\\___\\___\\___\\___\\___\\___\\__
     \\___\\___\\___\\___\\___\\___\\___\\_
@@ -119,6 +120,17 @@ async function typeBlock(content, className = "terminal-line", speed = 7) {
   for (const character of content) {
     block.textContent += character;
     await wait(character === "\n" ? speed * 3 : speed);
+  }
+}
+
+async function revealLines(content, className = "terminal-line", linesPerStep = 2, speed = 18) {
+  const block = appendBlock("", className);
+  const lines = content.trimEnd().split("\n");
+
+  for (let index = 0; index < lines.length; index += linesPerStep) {
+    const nextLines = lines.slice(index, index + linesPerStep).join("\n");
+    block.textContent += `${block.textContent ? "\n" : ""}${nextLines}`;
+    await wait(speed);
   }
 }
 
@@ -291,7 +303,7 @@ async function boot() {
   updatePrompt();
   await typeBlock("session initializing...", "terminal-line muted", 18);
   await wait(180);
-  await typeBlock(asciiLogo, "ascii", 2);
+  await revealLines(asciiLogo, "ascii", 2, 14);
   appendLine('type <span class="yellow">please</span> to see a list of commands');
   input.disabled = false;
   input.focus();
