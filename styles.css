@@ -198,11 +198,11 @@ input {
 .ascii {
   margin: 0 0 0.65rem;
   color: var(--green);
-  font-family: "Cormorant Garamond", "IBM Plex Mono", ui-monospace, monospace;
-  font-size: 1.2rem;
-  font-weight: 700;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
   letter-spacing: 0;
-  line-height: 1.55;
+  line-height: 1.35;
   overflow-wrap: anywhere;
   text-shadow:
     0 0 0.22rem rgba(0, 255, 65, 0.45),

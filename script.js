@@ -637,7 +637,7 @@ async function runCommand(rawCommand) {
 async function boot() {
   input.disabled = true;
   promptLabel.textContent = "";
-  terminalTitle.textContent = "AUTHORIZATION REQUIRED";
+  terminalTitle.textContent = "";
   state.phraseBlock = await typeBlock(introText, "ascii", 24);
   state.awaitingPassphrase = true;
   input.disabled = false;
