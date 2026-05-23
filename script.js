@@ -1,8 +1,12 @@
 const output = document.querySelector("#terminal-output");
 const form = document.querySelector("#terminal-form");
 const input = document.querySelector("#terminal-input");
+const inputBefore = document.querySelector("#input-before");
+const inputAfter = document.querySelector("#input-after");
 const promptLabel = document.querySelector("#prompt-label");
 const terminalTitle = document.querySelector("#terminal-title");
+const ambientImage = document.querySelector(".ambient-a");
+const initialAmbientRotation = -Math.PI / 18;
 
 const state = {
   cwd: "/home",
@@ -11,6 +15,10 @@ const state = {
   booted: false,
   awaitingPassphrase: false,
   phraseBlock: null,
+  ambientSettled: false,
+  ambientHopping: false,
+  ambientMirrored: false,
+  ambientRotation: initialAmbientRotation,
 };
 
 const fileTree = {
@@ -46,7 +54,19 @@ const fileTree = {
   },
   "/home/interests/piano": {
     type: "dir",
-    children: [],
+    children: ["current.txt", "repertoire.txt"],
+  },
+  "/home/interests/piano/current.txt": {
+    type: "file",
+    content: [
+      "hi",
+    ],
+  },
+  "/home/interests/piano/repertoire.txt": {
+    type: "file",
+    content: [
+      "hi",
+    ],
   },
   "/home/interests/puzzles": {
     type: "dir",
@@ -73,6 +93,7 @@ const fileTree = {
     type: "file",
     content: [
       "Hey, I am Jinyang, a rising senior at Harvard studying mathematics and statistics. I am passionate about quantitative research in finance, statistics, and science. Currently, I am especially interested in probability theory, market behavior, stochastic processes, and the intersection of statistics and decision-making.",
+      " ",
       "Outside of academics, I love listening and playing classical music, speedcubing, and playing competitive Brawl Stars.",
     ],
   },
@@ -84,13 +105,13 @@ const commands = {
   cd: "change directory; for forwards, cd <directory>, for backwards, cd ..",
   cat: "print file contents",
   pwd: "print current directory",
-  whoami: "find out...",
 };
 
-const introText = "Smiles and laughter are always good, but ";
-const passphrase = "never forget your poker face.";
-const passphraseWithoutPeriod = "never forget your poker face";
-const displayPhraseStart = "never forget your ";
+const introText = "Smiles and laughter are always good, but never forget your ...";
+const resolvedIntroText = introText.replace("...", "");
+const passphrase = "poker face.";
+const passphraseWithoutPeriod = "poker face";
+const displayPhraseStart = "";
 const displayPhraseEmphasis = "Poker Face.";
 const displayPhraseEnd = "";
 
@@ -108,7 +129,7 @@ function sanitize(value) {
 }
 
 function appendLine(content = "", className = "terminal-line") {
-  const line = document.createElement("p");
+  const line = document.createElement("div");
   line.className = className;
   line.innerHTML = content;
   output.append(line);
@@ -161,6 +182,166 @@ async function typeStyledIntoBlock(block, content, className, speed = 22) {
     if (state.booted) output.scrollTop = output.scrollHeight;
     await wait(speed);
   }
+
+  return span;
+}
+
+function animateAmbientFromPhrase(originNode) {
+  return new Promise((resolve) => {
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (!ambientImage || !originNode || reduceMotion) {
+      document.body.classList.add("unlocked");
+      state.ambientSettled = true;
+      resolve();
+      return;
+    }
+
+    const originRect = originNode.getBoundingClientRect();
+    const targetRect = ambientImage.getBoundingClientRect();
+    const targetWidth = ambientImage.offsetWidth || targetRect.width;
+    const targetHeight = ambientImage.offsetHeight || targetRect.height;
+
+    if (!originRect.width || !targetWidth) {
+      document.body.classList.add("unlocked");
+      state.ambientSettled = true;
+      resolve();
+      return;
+    }
+
+    const originX = originRect.left + originRect.width / 2;
+    const originY = originRect.top + originRect.height / 2;
+    const targetX = targetRect.left + targetRect.width / 2;
+    const targetY = targetRect.top + targetRect.height / 2;
+    const arcHeight = Math.min(190, window.innerHeight * 0.24);
+    const controlX = originX + (targetX - originX) * 0.5;
+    const controlY = Math.min(originY, targetY) - arcHeight;
+    const duration = 2800;
+    const startedAt = performance.now();
+
+    const easeInOutSine = (value) => -(Math.cos(Math.PI * value) - 1) / 2;
+    const mix = (start, end, value) => start + (end - start) * value;
+    const quadratic = (start, control, end, value) => (
+      (1 - value) * (1 - value) * start
+      + 2 * (1 - value) * value * control
+      + value * value * end
+    );
+
+    ambientImage.style.right = "auto";
+    ambientImage.style.bottom = "auto";
+    ambientImage.style.width = `${targetWidth}px`;
+    ambientImage.style.height = `${targetHeight}px`;
+    ambientImage.style.visibility = "visible";
+    ambientImage.style.zIndex = "4";
+    ambientImage.style.transition = "none";
+    ambientImage.style.willChange = "left, top, opacity, transform";
+
+    function placeFrame(timestamp) {
+      const rawProgress = Math.min((timestamp - startedAt) / duration, 1);
+      const travelProgress = easeInOutSine(rawProgress);
+      const x = quadratic(originX, controlX, targetX, travelProgress);
+      const y = quadratic(originY, controlY, targetY, travelProgress);
+      const scale = mix(0.08, 1, rawProgress);
+      const rotation = mix(-18, -10, travelProgress);
+      const opacity = Math.min(0.68, mix(0.2, 0.68, rawProgress / 0.16));
+
+      ambientImage.style.left = `${x - targetWidth / 2}px`;
+      ambientImage.style.top = `${y - targetHeight / 2}px`;
+      ambientImage.style.opacity = opacity;
+      ambientImage.style.transform = `rotate(${rotation}deg) scale(${scale})`;
+
+      if (rawProgress < 1) {
+        requestAnimationFrame(placeFrame);
+        return;
+      }
+
+      document.body.classList.add("unlocked");
+      ambientImage.style.left = `${targetX - targetWidth / 2}px`;
+      ambientImage.style.top = `${targetY - targetHeight / 2}px`;
+      ambientImage.style.opacity = "0.68";
+      ambientImage.style.transform = `rotate(${initialAmbientRotation}rad) scale(1)`;
+      ambientImage.style.zIndex = "2";
+      ambientImage.style.willChange = "auto";
+      state.ambientRotation = initialAmbientRotation;
+      state.ambientSettled = true;
+      resolve();
+    }
+
+    requestAnimationFrame(placeFrame);
+  });
+}
+
+function popAmbientToMirror() {
+  if (!ambientImage || !state.ambientSettled || state.ambientHopping) return;
+
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const rect = ambientImage.getBoundingClientRect();
+  const imageWidth = ambientImage.offsetWidth || rect.width;
+  const imageHeight = ambientImage.offsetHeight || rect.height;
+  const currentLeft = Number.parseFloat(ambientImage.style.left) || rect.left;
+  const currentTop = Number.parseFloat(ambientImage.style.top) || rect.top;
+  const mirroredLeft = window.innerWidth - currentLeft - imageWidth;
+  const targetIsLeft = mirroredLeft < window.innerWidth / 2;
+  const startRotation = state.ambientRotation;
+  const targetRotation = Math.random() * Math.PI * 2;
+
+  state.ambientHopping = true;
+  ambientImage.style.right = "auto";
+  ambientImage.style.bottom = "auto";
+  ambientImage.style.left = `${currentLeft}px`;
+  ambientImage.style.top = `${currentTop}px`;
+  ambientImage.style.width = `${imageWidth}px`;
+  ambientImage.style.height = `${imageHeight}px`;
+  ambientImage.style.transition = "none";
+  ambientImage.style.zIndex = "4";
+
+  if (reduceMotion) {
+    ambientImage.style.left = `${mirroredLeft}px`;
+    ambientImage.style.transform = `rotate(${targetRotation}rad) scale(1)`;
+    state.ambientHopping = false;
+    state.ambientMirrored = targetIsLeft;
+    state.ambientRotation = targetRotation;
+    return;
+  }
+
+  const disappear = ambientImage.animate(
+    [
+      { opacity: 0.68, transform: `rotate(${startRotation}rad) scale(1)` },
+      { opacity: 0, transform: `rotate(${startRotation}rad) scale(0.12)` },
+    ],
+    {
+      duration: 310,
+      easing: "cubic-bezier(0.45, 0, 0.55, 1)",
+      fill: "forwards",
+    }
+  );
+
+  disappear.onfinish = () => {
+    ambientImage.style.left = `${mirroredLeft}px`;
+    ambientImage.style.opacity = "0";
+    ambientImage.style.transform = `rotate(${targetRotation}rad) scale(0.12)`;
+
+    const reappear = ambientImage.animate(
+      [
+        { opacity: 0, transform: `rotate(${targetRotation}rad) scale(0.12)` },
+        { opacity: 0.68, transform: `rotate(${targetRotation}rad) scale(1)` },
+      ],
+      {
+        duration: 440,
+        easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+        fill: "forwards",
+      }
+    );
+
+    reappear.onfinish = () => {
+      ambientImage.style.opacity = "0.68";
+      ambientImage.style.transform = `rotate(${targetRotation}rad) scale(1)`;
+      ambientImage.style.zIndex = "2";
+      state.ambientHopping = false;
+      state.ambientMirrored = targetIsLeft;
+      state.ambientRotation = targetRotation;
+    };
+  };
 }
 
 function appendTable(rows) {
@@ -220,9 +401,16 @@ function nodeAt(path) {
   return fileTree[path];
 }
 
+function syncInputMirror() {
+  const cursorIndex = input.selectionStart ?? input.value.length;
+  inputBefore.textContent = input.value.slice(0, cursorIndex);
+  inputAfter.textContent = input.value.slice(cursorIndex);
+}
+
 function setInputValue(value) {
   input.value = value;
   input.setSelectionRange(value.length, value.length);
+  syncInputMirror();
 }
 
 function commonPrefix(values) {
@@ -441,10 +629,6 @@ async function runCommand(rawCommand) {
       appendLine(state.cwd);
       break;
 
-    case "whoami":
-      appendLine('<span class="accent">Jinyang Li, your favorite Supercell gamer; contact me to schedule a Colt 1v1! </span>');
-      break;
-
     default:
       appendLine(`<span class="error">${sanitize(name)}: command not found... use <span class="green">help</span></span>`);
   }
@@ -470,12 +654,12 @@ async function completePassphrase(value) {
 
   state.awaitingPassphrase = false;
   input.disabled = true;
-  state.phraseBlock.textContent = introText;
+  state.phraseBlock.textContent = resolvedIntroText;
   await typeIntoBlock(state.phraseBlock, displayPhraseStart, 22);
-  await typeStyledIntoBlock(state.phraseBlock, displayPhraseEmphasis, "blood-red", 22);
+  const emphasisNode = await typeStyledIntoBlock(state.phraseBlock, displayPhraseEmphasis, "blood-red", 22);
   await typeIntoBlock(state.phraseBlock, displayPhraseEnd, 22);
   await wait(140);
-  document.body.classList.add("unlocked");
+  await animateAmbientFromPhrase(emphasisNode);
   updatePrompt();
   input.disabled = false;
   input.focus();
@@ -486,6 +670,7 @@ form.addEventListener("submit", async (event) => {
   event.preventDefault();
   const command = input.value;
   input.value = "";
+  syncInputMirror();
 
   if (state.awaitingPassphrase) {
     completePassphrase(command);
@@ -508,17 +693,29 @@ input.addEventListener("keydown", (event) => {
     event.preventDefault();
     state.historyIndex = Math.max(0, state.historyIndex - 1);
     input.value = state.history[state.historyIndex] || "";
+    syncInputMirror();
   }
 
   if (event.key === "ArrowDown") {
     event.preventDefault();
     state.historyIndex = Math.min(state.history.length, state.historyIndex + 1);
     input.value = state.history[state.historyIndex] || "";
+    syncInputMirror();
   }
 });
 
+input.addEventListener("input", syncInputMirror);
+input.addEventListener("click", syncInputMirror);
+input.addEventListener("keyup", syncInputMirror);
+
+if (ambientImage) {
+  ambientImage.addEventListener("mouseenter", popAmbientToMirror);
+}
+
 document.querySelector(".terminal-shell").addEventListener("click", () => {
   input.focus();
+  syncInputMirror();
 });
 
+syncInputMirror();
 boot();

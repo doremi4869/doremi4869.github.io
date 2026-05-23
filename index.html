@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
       rel="stylesheet"
     >
     <link rel="stylesheet" href="styles.css">
@@ -20,7 +20,7 @@
   <body>
     <main class="stage" aria-label="Terminal portfolio">
       <div class="ambient ambient-a">
-        <img src="kaito.jpg" alt="">
+        <img src="kaito-cutout.png" alt="">
       </div>
 
       <section class="terminal-shell" aria-label="Interactive terminal">
@@ -34,15 +34,20 @@
           <label id="prompt-label" class="prompt-label" for="terminal-input">
             jinyangli:~/home %
           </label>
-          <input
-            id="terminal-input"
-            class="terminal-input"
-            name="command"
-            type="text"
-            spellcheck="false"
-            aria-labelledby="prompt-label"
-            autofocus
-          >
+          <div class="terminal-entry">
+            <span id="input-before" class="input-mirror" aria-hidden="true"></span>
+            <span class="terminal-cursor" aria-hidden="true"></span>
+            <span id="input-after" class="input-mirror input-after" aria-hidden="true"></span>
+            <input
+              id="terminal-input"
+              class="terminal-input"
+              name="command"
+              type="text"
+              spellcheck="false"
+              aria-labelledby="prompt-label"
+              autofocus
+            >
+          </div>
         </form>
       </section>
     </main>
